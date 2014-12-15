@@ -86,7 +86,7 @@ function userRoutes(app, middleware, controllers) {
 	setupPageRoute(app, '/users/sort-reputation', middleware, middlewares, controllers.users.getUsersSortedByReputation);
 	setupPageRoute(app, '/users/latest', middleware, middlewares, controllers.users.getUsersSortedByJoinDate);
 	setupPageRoute(app, '/users/search', middleware, middlewares, controllers.users.getUsersForSearch);
- }
+}
 
 function groupRoutes(app, middleware, controllers) {
 	var middlewares = [middleware.checkGlobalPrivacySettings];
@@ -102,13 +102,13 @@ function setupPageRoute(router, name, middleware, middlewares, controller) {
 	router.get('/api' + name, middlewares, controller);
 }
 
-module.exports = function(app, middleware) {
+module.exports = function (app, middleware) {
 	var router = express.Router(),
 		pluginRouter = express.Router(),
 		authRouter = express.Router(),
 		relativePath = nconf.get('relative_path');
 
-	pluginRouter.render = function() {
+	pluginRouter.render = function () {
 		app.render.apply(app, arguments);
 	};
 
@@ -129,9 +129,9 @@ module.exports = function(app, middleware) {
 	pluginRoutes(router, middleware, controllers);
 
 	/**
-	* Every view has an associated API route.
-	*
-	*/
+	 * Every view has an associated API route.
+	 *
+	 */
 
 	mainRoutes(router, middleware, controllers);
 	staticRoutes(router, middleware, controllers);
@@ -142,15 +142,15 @@ module.exports = function(app, middleware) {
 	userRoutes(router, middleware, controllers);
 	groupRoutes(router, middleware, controllers);
 
-	app.use(relativePath, router);
 	app.use(relativePath, pluginRouter);
+	app.use(relativePath, router);
 	app.use(relativePath, authRouter);
 
 	if (process.env.NODE_ENV === 'development') {
 		require('./debug')(app, middleware, controllers);
 	}
 
-	app.use(function(req, res, next) {
+	app.use(function (req, res, next) {
 		if (req.user || parseInt(meta.config.privateUploads, 10) !== 1) {
 			return next();
 		}
@@ -174,9 +174,9 @@ module.exports = function(app, middleware) {
 };
 
 function handle404(app, middleware) {
-	app.use(function(req, res, next) {
+	app.use(function (req, res, next) {
 		var relativePath = nconf.get('relative_path');
-		var	isLanguage = new RegExp('^' + relativePath + '/language/[\\w]{2,}/.*.json'),
+		var isLanguage = new RegExp('^' + relativePath + '/language/[\\w]{2,}/.*.json'),
 			isClientScript = new RegExp('^' + relativePath + '\\/src\\/.+\\.js');
 
 		if (isClientScript.test(req.url)) {
@@ -191,11 +191,16 @@ function handle404(app, middleware) {
 			res.status(404);
 
 			if (res.locals.isAPI) {
-				return res.json({path: req.path, error: 'not-found'});
+				return res.json({
+					path: req.path,
+					error: 'not-found'
+				});
 			}
 
-			middleware.buildHeader(req, res, function() {
-				res.render('404', {path: req.path});
+			middleware.buildHeader(req, res, function () {
+				res.render('404', {
+					path: req.path
+				});
 			});
 		} else {
 			res.status(404).type('txt').send('Not found');
@@ -204,7 +209,7 @@ function handle404(app, middleware) {
 }
 
 function handleErrors(app, middleware) {
-	app.use(function(err, req, res, next) {
+	app.use(function (err, req, res, next) {
 		winston.error(req.path + '\n', err.stack);
 
 		if (err.code === 'EBADCSRFTOKEN') {
@@ -214,12 +219,17 @@ function handleErrors(app, middleware) {
 		res.status(err.status || 500);
 
 		if (res.locals.isAPI) {
-			return res.json({path: req.path, error: err.message});
+			return res.json({
+				path: req.path,
+				error: err.message
+			});
 		} else {
-			middleware.buildHeader(req, res, function() {
-				res.render('500', {path: req.path, error: err.message});
+			middleware.buildHeader(req, res, function () {
+				res.render('500', {
+					path: req.path,
+					error: err.message
+				});
 			});
 		}
 	});
 }
-
